@@ -56,6 +56,8 @@ class CategoriesView(APIView):
 
 
 class MenuItemsView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer = MenuItemsSerializer
     def get(self, request):
         all_menu_items = MenuItems.objects.filter(category=request.GET.get('category')).all()
@@ -94,6 +96,8 @@ class MenuItemsView(APIView):
 
     
 class InventoryItemsView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer = InventoryItemsSerializer
     def get(self, request):
         all_inventory_items = InventoryItems.objects.all()
@@ -109,6 +113,8 @@ class InventoryItemsView(APIView):
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
 class TransactionsView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
     serializer = TransactionsSerializer
 
     def get(self, request):
@@ -127,15 +133,23 @@ class TransactionsView(APIView):
         transaction = Transactions.objects.filter(transaction_id=req_data['transaction_id'])[0]
         for item in req_data['items']:
             item['transaction_id'] = transaction.id
+            print(item)
             order_item = OrderItemsSerializer(data=item)
-            print(order_item)
+            menu_item = MenuItems.objects.get(id=item['id'])
+            ingredients = menu_item.ingredients_set.all()
+            for ingredient in ingredients:
+                edit_inventory = InventoryItems.objects.get(id=ingredient.item_id)
+                print("Ingredient Quantity", ingredient.quantity)
+                print('Edit Inventory', edit_inventory.quantity)
+                edit_inventory.quantity = edit_inventory.quantity - (ingredient.quantity * item['pcs'])
+                edit_inventory.save()
             if order_item.is_valid():
                 order_item.save()
-                order_item_added = OrderItems.objects.latest('id')
+                order_item_added = OrderItems.objects.order_by('-id')[0]
+                
                 transaction.orderitems_set.add(order_item_added)
             
             print(transaction.orderitems_set.all())
-            print(order_item.errors)
             
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
         

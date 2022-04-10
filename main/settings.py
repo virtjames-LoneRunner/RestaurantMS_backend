@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-0_-@izl+icx7)zwf7^nijx5i8=k&vz1q=6hj29^0@k3b7*acxa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '[::1]', '192.168.1.17']
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '[::1]', '192.168.1.8']
 
 
 # Application definition
@@ -57,7 +57,7 @@ MIDDLEWARE = [
 # CORS_ALLOWED_ORIGINS=[
 #     'http://localhost:3000'
 # ]
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://192.168.1.8:3000']
 CORS_ALLOW_ALL_ORIGINS=True
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = (
@@ -101,18 +101,18 @@ WSGI_APPLICATION = 'main.wsgi.application'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.sqlite3',
-    #     'NAME': BASE_DIR / 'db.sqlite3',
-    # }
     'default': {
-        'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'rma_db',
-        'USER': 'root',
-        'PASSWORD': '',
-        'HOST': 'localhost',
-        'PORT': '3306',
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
     }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.mysql',
+    #     'NAME': 'rma_db',
+    #     'USER': 'root',
+    #     'PASSWORD': '',
+    #     'HOST': 'localhost',
+    #     'PORT': '3306',
+    # }
 }
 
 

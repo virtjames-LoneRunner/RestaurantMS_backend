@@ -65,6 +65,7 @@ class TransactionItems(models.Model):
     item = models.ForeignKey(MenuItems, on_delete=models.DO_NOTHING)
 
 class OrderItems(models.Model):
+    # inventory_id = models.IntegerField()
     transaction_id = models.ForeignKey(Transactions, on_delete=models.CASCADE)
     item = models.CharField(max_length=100)
     unit_price = models.FloatField()
