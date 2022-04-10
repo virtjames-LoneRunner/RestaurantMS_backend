@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from .models import Categories, InventoryItems, MenuItems, OrderItems, Users, Transactions, TransactionItems
+from .models import Categories, Ingredients, InventoryItems, MenuItems, OrderItems, Users, Transactions, TransactionItems
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -13,15 +13,21 @@ class CategoriesSerializer(serializers.ModelSerializer):
         model = Categories
         fields = ('id', 'code', 'category')
 
+class IngredientsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Ingredients
+        fields = ('id', 'menu_item', 'item_id', 'item', 'unit', 'quantity') 
+
 class MenuItemsSerializer(serializers.ModelSerializer):
+    ingredients_set = IngredientsSerializer(many=True, required=False)
     class Meta:
         model = MenuItems 
-        fields = ('id', 'category', 'available', 'menu_item', 'unit', 'unit_price', 'created_at', 'updated_at')
+        fields = ('id', 'category', 'available', 'menu_item', 'unit', 'unit_price', 'ingredients_set', 'created_at', 'updated_at')
 
 class InventoryItemsSerializer(serializers.ModelSerializer):
     class Meta:
         model = InventoryItems
-        fields = ('id', 'inventory_item', 'quantity', 'unit', 'created_at', 'updated_at')
+        fields = ('id', 'inventory_item', 'item_category', 'quantity', 'reorder_quantity', 'unit', 'created_at', 'updated_at')
 
 class TransactionsSerializer(serializers.ModelSerializer):
     class Meta:
