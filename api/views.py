@@ -14,6 +14,21 @@ from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
+
+class UsersView(APIView):
+    def get(self, request):
+        users = User.objects.all()
+        users_ = []
+
+        for user in users:
+            role = "Non-Admin"
+            if user.is_superuser:
+                role = 'Admin'
+            users_.append({'id': user.id, 'role': role , 'first_name': user.first_name, 'last_name': user.last_name, 'email': user.email, 'last_login': user.last_login})
+        
+
+        return Response({'users' : users_}, status=200)
+
 class Authentication(APIView):
     def get(self, request):
         pass
@@ -118,9 +133,9 @@ class TransactionsView(APIView):
     serializer = TransactionsSerializer
 
     def get(self, request):
-        all_transactions = Transactions.objects.all()
+        all_transactions = Transactions.objects.order_by('-id').all()
         
-        return Response(TransactionsSerializer(all_transactions, many=True).data, status=status.HTTP_200_OK)
+        return Response(TransactionsSerializer(all_transactions, many=True).data[0:6], status=status.HTTP_200_OK)
 
     def post(self, request):
         req_data = request.data['data']
