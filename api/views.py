@@ -156,7 +156,7 @@ class TransactionsView(APIView):
                 edit_inventory = InventoryItems.objects.get(id=ingredient.item_id)
                 print("Ingredient Quantity", ingredient.quantity)
                 print('Edit Inventory', edit_inventory.quantity)
-                edit_inventory.quantity = edit_inventory.quantity - (ingredient.quantity * item['pcs'])
+                edit_inventory.quantity = edit_inventory.quantity - (ingredient.quantity * float(item['pcs']))
                 edit_inventory.save()
             if order_item.is_valid():
                 order_item.save()
