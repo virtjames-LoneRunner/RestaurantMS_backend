@@ -29,12 +29,6 @@ class InventoryItemsSerializer(serializers.ModelSerializer):
         model = InventoryItems
         fields = ('id', 'inventory_item', 'item_category', 'quantity', 'reorder_quantity', 'unit', 'created_at', 'updated_at')
 
-class TransactionsSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Transactions
-        fields = ('id', 'cashier_id', 'transaction_id', 'transaction_type', 'transaction_date', 
-                  'table_number', 'total_amount', 'amount_given', 'discount', 'change', 'address', 'items')
-
 class TransactionItems(serializers.ModelSerializer):
     class Meta:
         model = TransactionItems
@@ -44,4 +38,11 @@ class TransactionItems(serializers.ModelSerializer):
 class OrderItemsSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItems
-        fields = ('id', 'transaction_id', 'item', 'unit', 'unit_price', 'pcs')
+        fields = ('id', 'transaction', 'item', 'unit', 'unit_price', 'pcs', 'status')
+
+class TransactionsSerializer(serializers.ModelSerializer):
+    orderitems_set = OrderItemsSerializer(many=True, required=False)
+    class Meta:
+        model = Transactions
+        fields = ('id', 'cashier_id', 'transaction_id', 'transaction_type', 'transaction_date', 
+                  'table_number', 'total_amount', 'amount_given', 'discount', 'change', 'address', 'orderitems_set', 'status')

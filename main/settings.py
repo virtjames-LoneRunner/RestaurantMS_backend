@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-0_-@izl+icx7)zwf7^nijx5i8=k&vz1q=6hj29^0@k3b7*acxa
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '[::1]', '192.168.1.15']
+ALLOWED_HOSTS = ['.localhost', '127.0.0.1', '[::1]', '192.168.1.6']
 
 
 # Application definition
@@ -40,7 +40,8 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'rest_framework',
     'corsheaders',
-    'rest_framework.authtoken'
+    'rest_framework.authtoken',
+    'channels'
 ]
 
 MIDDLEWARE = [
@@ -57,7 +58,7 @@ MIDDLEWARE = [
 # CORS_ALLOWED_ORIGINS=[
 #     'http://localhost:3000'
 # ]
-CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://192.168.1.8:3000']
+CSRF_TRUSTED_ORIGINS = ['http://localhost:3000', 'http://192.168.1.6:3000']
 CORS_ALLOW_ALL_ORIGINS=True
 CORS_ALLOW_CREDENTIALS = True
 CORS_EXPOSE_HEADERS = (
@@ -96,6 +97,18 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'main.wsgi.application'
 
+ASGI_APPLICATION = "main.asgi.application"
+
+CHANNEL_LAYERS = {
+    'default': {
+        'BACKEND': 'channels_redis.core.RedisChannelLayer',
+        'CONFIG': {
+            "hosts": [('127.0.0.1', '6379')]
+            # "hosts": ['rediss://:mZV7fl2CsJMcz5p5Y0WpiFPLVLHC6BrDZTOtlV3aP6sIJ7TISes86qfdZTvlaW1WWisaczoYZ2kdBIdd8pabISAX0iEIdcFZBWd@35.225.208.61:9319'],
+        },
+    # 'ROUTING': 'main.routing.application',
+    },
+}
 
 # Database
 # https://docs.djangoproject.com/en/4.0/ref/settings/#databases
@@ -156,3 +169,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

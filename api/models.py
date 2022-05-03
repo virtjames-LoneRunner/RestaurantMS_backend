@@ -47,16 +47,18 @@ class Transactions(models.Model):
     transaction_id = models.CharField(max_length=50)
     transaction_type = models.CharField(max_length=50)
     transaction_date = models.DateTimeField(auto_now_add=True)
-    table_number = models.IntegerField()
+    table_number = models.IntegerField(blank=True, null=True)
     
     total_amount = models.FloatField()
     amount_given = models.FloatField()
     discount = models.FloatField()
     change = models.FloatField()
 
+    status = models.CharField(max_length=255, default="Not Started")
+
     address = models.CharField(max_length=255)
 
-    items = models.ManyToManyField(MenuItems, through="TransactionItems", through_fields=('transaction', 'item'))
+    # items = models.ManyToManyField(MenuItems, through="TransactionItems", through_fields=('transaction', 'item'))
 
 
 
@@ -66,7 +68,8 @@ class TransactionItems(models.Model):
 
 class OrderItems(models.Model):
     # inventory_id = models.IntegerField()
-    transaction_id = models.ForeignKey(Transactions, on_delete=models.CASCADE)
+    transaction = models.ForeignKey(Transactions, on_delete=models.CASCADE, blank=True, null=True)
+    status = models.CharField(max_length=255, default="Not Started")
     item = models.CharField(max_length=100)
     unit_price = models.FloatField()
     unit = models.CharField(max_length=20)

@@ -1,3 +1,5 @@
+from doctest import master
+from re import M
 from django.shortcuts import render
 from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
@@ -135,7 +137,7 @@ class TransactionsView(APIView):
     def get(self, request):
         all_transactions = Transactions.objects.order_by('-id').all()
         
-        return Response(TransactionsSerializer(all_transactions, many=True).data[0:6], status=status.HTTP_200_OK)
+        return Response(TransactionsSerializer(all_transactions, many=True).data, status=status.HTTP_200_OK)
 
     def post(self, request):
         req_data = request.data['data']
@@ -161,10 +163,92 @@ class TransactionsView(APIView):
             if order_item.is_valid():
                 order_item.save()
                 order_item_added = OrderItems.objects.order_by('-id')[0]
+
                 
                 transaction.orderitems_set.add(order_item_added)
+            else:
+                print(order_item.errors)
             
             print(transaction.orderitems_set.all())
             
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
-        
+
+
+class OrdersView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    serializer = TransactionsSerializer
+    
+
+    def get(self, request):
+        state = request.GET.get('state')
+        transactions = Transactions.objects.filter(status=state).all()
+            
+        transactions_orders = []
+
+        for transaction in transactions:
+            orders = []
+            for order in transaction.orderitems_set.all():
+                orders.append(OrderItemsSerializer(order).data)
+
+            if not orders:
+                continue
+            transactions_orders.append({"id": transaction.id,
+                                        "transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, 
+                                        "transaction_date": transaction.transaction_date, "table_number": transaction.table_number,
+                                        "status": transaction.status,
+                                        "orderitems_set": orders})
+
+        if state == "Not Started":
+            transactions_ = Transactions.objects.filter(status="Started").all()
+            for transaction in transactions_:
+                orders = []
+                for order in transaction.orderitems_set.all():
+                    orders.append(OrderItemsSerializer(order).data)
+
+                if not orders:
+                    continue
+                transactions_orders.append({"id": transaction.id,
+                                            "transaction_id": transaction.transaction_id, "transaction_type": transaction.transaction_type, 
+                                            "transaction_date": transaction.transaction_date, "table_number": transaction.table_number,
+                                            "status": transaction.status,
+                                            "orderitems_set": orders})
+            
+        return Response(transactions_orders, status=200)
+
+    
+    def patch(self, request):
+        print(request.data)
+        try:
+            transaction = Transactions.objects.filter(id=int(request.data['data']['transaction_id'])).first()
+            masterStatus = request.data['data']['masterStatus']
+            if masterStatus == "Done" and transaction.status == "Done":
+                masterStatus = "Started"
+            elif masterStatus == "Not Done":
+                masterStatus = "Done"
+            elif masterStatus == "Not Started":
+                masterStatus = "Not Started"
+                for order in transaction.orderitems_set.all():
+                    order.status = "Not Started"
+
+            transaction.status = masterStatus
+            transaction.save()
+        except KeyError as e:
+            print(e)
+            orderItem = OrderItems.objects.filter(id=int(request.data['data']['order_id'])).first()
+            transaction = Transactions.objects.filter(id=orderItem.transaction.id).first()
+
+            orderItem.status = request.data['data']['order_status']
+
+            if orderItem.status == "Done" or orderItem.status == "Started":
+                transaction.status = "Started"
+            else:
+                transaction.status = "Not Started"
+
+
+            orderItem.save()
+            transaction.save()
+
+        return Response({"message": "Done"}, status=200)
+
+
