@@ -1,3 +1,4 @@
+import datetime
 from doctest import master
 from re import M
 from django.shortcuts import render
@@ -71,29 +72,44 @@ class CategoriesView(APIView):
         new_category.save()
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
+    def patch(self, request):
+        req_data = request.data['data']
+        category = Categories.objects.filter(id=int(req_data['id'])).first()
+        category.category = req_data['category']
+        category.code = req_data['code']
+        category.save()
+        return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
+
 
 class MenuItemsView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
     serializer = MenuItemsSerializer
     def get(self, request):
-        all_menu_items = MenuItems.objects.filter(category=request.GET.get('category')).all()
-        for menu_item in all_menu_items:
-            available = True
-            ingredients_set = menu_item.ingredients_set.all()
-            if not ingredients_set:
-                continue
-            for item in ingredients_set:
-                inventory = InventoryItems.objects.get(id=item.item_id)
-                if inventory.quantity >= item.quantity:
-                    available = True
-                else:
-                    available = False
-            menu_item.available = available
-            menu_item.save()
+        if request.GET.get('category'):
+            all_menu_items = MenuItems.objects.filter(category=request.GET.get('category')).all()
+            for menu_item in all_menu_items:
+                available = True
+                ingredients_set = menu_item.ingredients_set.all()
+                if not ingredients_set:
+                    continue
+                for item in ingredients_set:
+                    print(item)
+                    inventory = InventoryItems.objects.get(id=item.item_id)
+                    if inventory.quantity >= item.quantity:
+                        available = True
+                    else:
+                        available = False
+                menu_item.available = available
+                menu_item.save()
 
-        return Response(MenuItemsSerializer(all_menu_items, many=True).data, status=status.HTTP_200_OK)
+            return Response(MenuItemsSerializer(all_menu_items, many=True).data, status=status.HTTP_200_OK)
 
+        else:
+            print(int(request.GET.get('id')))
+            menu_item = MenuItems.objects.filter(id=int(request.GET.get('id'))).first()
+            return Response(MenuItemsSerializer(menu_item).data, status=status.HTTP_200_OK)
+        
     def post(self, request):
         req_data = request.data['data']
         category = Categories.objects.get(id=int(req_data['category']))
@@ -108,6 +124,42 @@ class MenuItemsView(APIView):
             new_ingredient.save()
             # ingredient_added = Ingredients.objects.latest('id')
             # new_item.ingredient_set.add(new_ingredient)
+
+        return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
+
+    
+    def patch(self, request):
+        req_data = request.data['data']
+        menu_item = MenuItems.objects.filter(id=req_data['id']).first()
+        
+        for ingredient in req_data['ingredient_set']:
+            if type(ingredient['item']) != type("Str"):
+                item = ingredient['item']
+                ingredient['item'] = item['item']
+                ingredient['item_id'] = item['id']
+                ingredient['id'] = item['id']
+
+        serialized = MenuItemsSerializer(data=req_data, instance=menu_item)
+        if not serialized.is_valid():
+            return Response({"errors": serialized.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        serialized.save()
+        # category = Categories.objects.get(id=int(req_data['category']))
+        # new_item = MenuItems.objects.create(category=category, available=req_data['available'], 
+        #                                     menu_item=req_data['menu_item'], unit=req_data['unit'], unit_price=req_data['unit_price'])
+        
+        # new_item.save()
+        # new_item = MenuItems.objects.latest('id')
+
+        ingredients_already_exist = Ingredients.objects.filter(menu_item=menu_item).all()
+        ingredients_already_exist.delete()
+
+        print(req_data['ingredient_set'])
+        for ingredient in req_data['ingredient_set']:
+            new_ingredient = Ingredients.objects.create(menu_item=menu_item, item_id=ingredient['item_id'], item=ingredient['item'], unit=ingredient['unit'], quantity=ingredient['quantity'])
+            new_ingredient.save()
+            # ingredient_added = Ingredients.objects.latest('id')
+            # menu_item.ingredient_set.add(new_ingredient)
 
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
@@ -135,6 +187,7 @@ class TransactionsView(APIView):
     serializer = TransactionsSerializer
 
     def get(self, request):
+        
         all_transactions = Transactions.objects.order_by('-id').all()
         
         return Response(TransactionsSerializer(all_transactions, many=True).data, status=status.HTTP_200_OK)
@@ -182,7 +235,23 @@ class OrdersView(APIView):
 
     def get(self, request):
         state = request.GET.get('state')
-        transactions = Transactions.objects.filter(status=state).all()
+        start_date = request.GET.get('start-date')
+        end_date = request.GET.get('end-date')
+        if start_date == end_date:
+            date = end_date.split("-")
+            print(date, int(date[0]), int(date[1]), int(date[2]))
+
+            transactions = Transactions.objects.filter(status=state, 
+                                                       transaction_date__year=date[0], 
+                                                       transaction_date__month=date[1], 
+                                                       transaction_date__day=date[2]).all()
+        else:
+            start_date = start_date.split('-')
+            end_date = end_date.split('-')
+            start = datetime.date(int(start_date[0]), int(start_date[1]), int(start_date[2]))
+            end = datetime.date(int(end_date[0]), int(end_date[1]), int(end_date[2]))
+            new_end = end + datetime.timedelta(days=1)
+            transactions = Transactions.objects.filter(status=state, transaction_date__range=[start, new_end]).all()
             
         transactions_orders = []
 
@@ -249,6 +318,6 @@ class OrdersView(APIView):
             orderItem.save()
             transaction.save()
 
-        return Response({"message": "Done"}, status=200)
+        return Response({"message": "Done", "transaction_id": transaction.transaction_id, "table_number": transaction.table_number}, status=200)
 
 
