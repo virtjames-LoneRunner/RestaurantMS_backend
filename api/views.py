@@ -123,7 +123,7 @@ class MenuItemsView(APIView):
             new_ingredient = Ingredients.objects.create(menu_item=new_item, item_id=ingredient['item']['id'], item=ingredient['item']['item'], unit=ingredient['unit'], quantity=ingredient['quantity'])
             new_ingredient.save()
             # ingredient_added = Ingredients.objects.latest('id')
-            new_item.ingredient_set.add(new_ingredient)
+            # new_item.ingredient_set.add(new_ingredient)
 
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
