@@ -87,7 +87,7 @@ class MenuItemsView(APIView):
     serializer = MenuItemsSerializer
     def get(self, request):
         if request.GET.get('category'):
-            all_menu_items = MenuItems.objects.filter(category=request.GET.get('category')).all()
+            all_menu_items = MenuItems.objects.filter(category=request.GET.get('category')).order_by('menu_item').all()
             for menu_item in all_menu_items:
                 available = True
                 ingredients_set = menu_item.ingredients_set.all()
