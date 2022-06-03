@@ -188,8 +188,24 @@ class TransactionsView(APIView):
 
     def get(self, request):
         
-        all_transactions = Transactions.objects.order_by('-id').all()
-        
+        # all_transactions = Transactions.objects.order_by('-id').all()
+        start_date = request.GET.get('start-date')
+        end_date = request.GET.get('end-date')
+        if start_date == end_date:
+            date = end_date.split("-")
+            print(date, int(date[0]), int(date[1]), int(date[2]))
+
+            all_transactions = Transactions.objects.filter(transaction_date__year=date[0], 
+                                                       transaction_date__month=date[1], 
+                                                       transaction_date__day=date[2]).order_by('-id').all()
+        else:
+            start_date = start_date.split('-')
+            end_date = end_date.split('-')
+            start = datetime.date(int(start_date[0]), int(start_date[1]), int(start_date[2]))
+            end = datetime.date(int(end_date[0]), int(end_date[1]), int(end_date[2]))
+            new_end = end + datetime.timedelta(days=1)
+            all_transactions = Transactions.objects.filter(transaction_date__range=[start, new_end]).order_by('-id').all()
+         
         return Response(TransactionsSerializer(all_transactions, many=True).data, status=status.HTTP_200_OK)
 
     def post(self, request):
