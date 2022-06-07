@@ -1,6 +1,6 @@
 from dataclasses import field
 from rest_framework import serializers
-from .models import Categories, Ingredients, InventoryItems, MenuItems, OrderItems, Users, Transactions, TransactionItems
+from .models import Categories, Ingredients, InventoryItems, MenuItems, OrderItems, Reservations, Tables, Users, Transactions, TransactionItems
 
 
 class UsersSerializer(serializers.ModelSerializer):
@@ -46,3 +46,14 @@ class TransactionsSerializer(serializers.ModelSerializer):
         model = Transactions
         fields = ('id', 'cashier_id', 'transaction_id', 'transaction_type', 'transaction_date', 
                   'table_number', 'total_amount', 'amount_given', 'discount', 'change', 'address', 'orderitems_set', 'status')
+
+
+class ReservationsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Reservations
+        fields = ('id', 'date', 'time_in', 'time_out', 'name')
+class TablesSerializer(serializers.ModelSerializer):
+    reservations_set = ReservationsSerializer(many=True, required=False)
+    class Meta:
+        model = Tables
+        fields = ('id', 'table_number', 'occupied', 'reservations_set', 'seats')

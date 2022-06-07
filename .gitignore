@@ -1,2 +1,4 @@
 /env
 __pycache__/
+crt.pem
+key.pem

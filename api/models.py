@@ -74,3 +74,17 @@ class OrderItems(models.Model):
     unit_price = models.FloatField()
     unit = models.CharField(max_length=20)
     pcs = models.IntegerField()
+
+
+class Tables(models.Model):
+    table_number = models.IntegerField()
+    occupied = models.BooleanField(default=False)
+    # reservations = models.ForeignKey(Reservations, on_delete=models.CASCADE, blank=True, null=True)
+    seats = models.IntegerField()
+
+class Reservations(models.Model):
+    date = models.DateField()
+    time_in = models.TimeField()
+    time_out = models.TimeField()
+    name = models.CharField(max_length=100)
+    table = models.ForeignKey(Tables, on_delete=models.CASCADE, blank=True, null=True)

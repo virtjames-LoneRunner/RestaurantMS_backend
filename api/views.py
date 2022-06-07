@@ -6,8 +6,8 @@ from django.contrib.auth.models import User
 from django.contrib.auth import authenticate
 
 
-from .models import Ingredients, InventoryItems, MenuItems, OrderItems, Categories, Transactions, TransactionItems
-from .serializers import CategoriesSerializer, InventoryItemsSerializer, MenuItemsSerializer, OrderItemsSerializer, TransactionsSerializer
+from .models import Ingredients, InventoryItems, MenuItems, OrderItems, Categories, Tables, Transactions, TransactionItems
+from .serializers import CategoriesSerializer, InventoryItemsSerializer, MenuItemsSerializer, OrderItemsSerializer, TablesSerializer, TransactionsSerializer
 
 from rest_framework import status
 from rest_framework.views import APIView
@@ -181,6 +181,19 @@ class InventoryItemsView(APIView):
         new_inventory_item.save()
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
+    def patch(self, request):
+        req_data = request.data['data']
+        inventory_item = InventoryItems.objects.filter(id=req_data['id']).first()
+        edit_inventory_item = InventoryItemsSerializer(data=req_data, instance=inventory_item)
+        if not edit_inventory_item.is_valid():
+            return Response({'errors': edit_inventory_item.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        edit_inventory_item.save()
+
+        return Response({'message': "Success"}, status=status.HTTP_200_OK)
+
+
+
 class TransactionsView(APIView):
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
@@ -239,6 +252,11 @@ class TransactionsView(APIView):
                 print(order_item.errors)
             
             print(transaction.orderitems_set.all())
+
+        table = Tables.objects.filter(table_number=req_data['table_number']).first()
+        if table:
+            table.occupied = True
+            table.save()
             
         return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
 
@@ -337,3 +355,32 @@ class OrdersView(APIView):
         return Response({"message": "Done", "transaction_id": transaction.transaction_id, "table_number": transaction.table_number}, status=200)
 
 
+class TablesView(APIView):
+    authentication_classes = [TokenAuthentication]
+    permission_classes = [IsAuthenticated]
+    
+    def get(self, request):
+        tables = Tables.objects.order_by('table_number').all()
+        return Response(TablesSerializer(tables, many=True).data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        req_data = request.data['data']
+        new_table = TablesSerializer(data=req_data)
+        if not new_table.is_valid(): 
+            return Response({'errors': new_table.errors}, status=status.HTTP_400_BAD_REQUEST)
+        
+        new_table.save()
+
+        return Response({'message': 'Success!'}, status=status.HTTP_201_CREATED)
+
+    def patch(self, request):
+        req_data = request.data['data']
+        table = Tables.objects.filter(id=req_data['id']).first()
+        edit_table = TablesSerializer(data=req_data, instance=table)
+        
+        if not edit_table.is_valid():
+            return Response({'errors': edit_table.errors}, status=status.HTTP_400_BAD_REQUEST)
+
+        edit_table.save()
+
+        return Response({'message': 'Success!'}, status=status.HTTP_200_OK)
